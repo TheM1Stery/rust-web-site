@@ -27,7 +27,7 @@ async fn main() {
     let router = Router::new()
                     .route("/", get(index))
                     .route("/json", get(return_json))
-                    .route("dummy_healthcheck", get(healthcheck))
+                    .route("/dummy_healthcheck", get(healthcheck))
                     .layer(TraceLayer::new_for_http());
 
 
