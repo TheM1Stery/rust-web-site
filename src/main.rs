@@ -32,7 +32,7 @@ async fn main() {
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
                 // axum logs rejections from built-in extractors with the `axum::rejection`
                 // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
-                "example_tracing_aka_logging=debug,tower_http=debug,axum::rejection=trace".into()
+                "axum-web-test=debug,tower_http=debug,axum::rejection=trace".into()
             }),
         )
         .with(tracing_subscriber::fmt::layer())
@@ -47,10 +47,11 @@ async fn main() {
 
 
 
-    let listener = tokio::net::TcpListener::bind(format!("localhost:{port}"))
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}"))
         .await
         .unwrap();
 
+    // tracing::debug!("listening on {}", listener.local_addr().unwrap());
     println!("Listening on port {port}");
 
     axum::serve(listener, router)
