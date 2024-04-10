@@ -1,27 +1,11 @@
 use axum::{response::Html, routing::get, Json, Router};
+use axum_web_test::{index, return_json};
 use serde::Serialize;
 use tokio::signal;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 
-
-async fn index() -> Html<&'static str> {
-    Html("<h1>Hello World!</h1>")
-}
-
-#[derive(Serialize)]
-struct Test {
-    text: String,
-    salam: i32
-}
-
-async fn return_json() -> Json<Test> {
-    Json(Test {
-        text: String::from("salam"),
-        salam: 1337
-    })
-}
 
 
 
@@ -43,6 +27,7 @@ async fn main() {
     let router = Router::new()
                     .route("/", get(index))
                     .route("/json", get(return_json))
+                    .route("dummy_healthcheck", )
                     .layer(TraceLayer::new_for_http());
 
 
