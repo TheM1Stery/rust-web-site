@@ -1,4 +1,5 @@
-use axum::{response::Html, routing::get, Router};
+use axum::{response::Html, routing::get, Json, Router};
+use serde::Serialize;
 use tokio::signal;
 
 
@@ -6,13 +7,27 @@ async fn index() -> Html<&'static str> {
     Html("<h1>Hello World!</h1>")
 }
 
+#[derive(Serialize)]
+struct Test {
+    text: String,
+    salam: i32
+}
+
+async fn return_json() -> Json<Test> {
+    Json(Test {
+        text: String::from("salam"),
+        salam: 1337
+    })
+}
+
 
 
 #[tokio::main]
 async fn main() {
-    let port = 8000;
+    let port = 1337;
     let router = Router::new()
-                    .route("/", get(index));
+                    .route("/", get(index))
+                    .route("/json", get(return_json));
 
 
 
