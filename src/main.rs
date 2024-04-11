@@ -1,6 +1,5 @@
-use axum::{response::Html, routing::get, Json, Router};
+use axum::{routing::get, Router};
 use axum_web_test::{healthcheck, index, return_json};
-use serde::Serialize;
 use tokio::signal;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
