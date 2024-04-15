@@ -38,6 +38,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool = get_pooled_connection(&database_url)
         .await?;
 
+    sqlx::migrate!()
+        .run(&pool)
+        .await?;
+
     let router = router.with_state(AppState {
         db_pool: pool
     });
