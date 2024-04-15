@@ -47,26 +47,17 @@ pub async fn create_user(
     State(state): State<AppState>,
     Json(params): Json<UserParams>,
 ) -> Result<Json<User>, (StatusCode, String)> {
-    let res = sqlx::query!(
-        "INSERT INTO users (name, email) VALUES ( ?1, ?2)",
+    let user = sqlx::query_as!(
+        User,
+        "INSERT INTO users (name, email) VALUES (?, ?) RETURNING id, name, email",
         params.name,
         params.email
     )
-    .execute(&state.db_pool)
+    .fetch_one(&state.db_pool)
     .await
-    .map_err(internal_error);
+    .map_err(internal_error)?;
 
-    match res {
-        Ok(sql_result) => {
-            let user = User {
-                id: sql_result.last_insert_rowid(),
-                name: params.name,
-                email: params.email,
-            };
-            Ok(Json(user))
-        }
-        Err(e) => Err(e)
-    }
+    Ok(Json(user))
 }
 
 pub async fn get_user(State(state): State<AppState>, Path(id): Path<i64>) -> Result<Json<User>, (StatusCode, String)>{
@@ -74,15 +65,11 @@ pub async fn get_user(State(state): State<AppState>, Path(id): Path<i64>) -> Res
         sqlx::query_as!(User, "SELECT * FROM users WHERE id = ?1", id)
         .fetch_optional(&state.db_pool)
         .await
-        .transpose();
+        .map_err(internal_error)?;
 
-    if user.is_none(){
-        return Err((StatusCode::NOT_FOUND, String::from("Not found")));
-    }
-
-    match user.unwrap().map_err(internal_error) {
-        Ok(user) => Ok(Json(user)),
-        Err(e) => Err(e),
+    match user {
+        Some(user) => Ok(Json(user)),
+        None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
 }
 
