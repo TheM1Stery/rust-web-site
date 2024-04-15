@@ -1,7 +1,7 @@
 use std::env;
 use axum::routing::post;
 use axum::{routing::get, Router};
-use axum_web_test::{create_user, healthcheck, index, return_json, AppState};
+use axum_web_test::{create_user, get_user, healthcheck, index, return_json, AppState};
 use axum_web_test::database::get_pooled_connection;
 use sqlx::Result;
 use tokio::signal;
@@ -30,6 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .route("/json", get(return_json))
                     .route("/dummy_healthcheck", get(healthcheck))
                     .route("/user", post(create_user))
+                    .route("/user/:id", get(get_user))
                     .layer(TraceLayer::new_for_http());
 
     let database_url = env::var("DATABASE_URL")?;

@@ -2,7 +2,7 @@ pub mod database;
 mod user;
 
 use axum::{
-    extract::State,
+    extract::{Path, State},
     http::StatusCode,
     response::{Html, IntoResponse, Response},
     Json,
@@ -66,6 +66,23 @@ pub async fn create_user(
             Ok(Json(user))
         }
         Err(e) => Err(e)
+    }
+}
+
+pub async fn get_user(State(state): State<AppState>, Path(id): Path<i64>) -> Result<Json<User>, (StatusCode, String)>{
+    let user =
+        sqlx::query_as!(User, "SELECT * FROM users WHERE id = ?1", id)
+        .fetch_optional(&state.db_pool)
+        .await
+        .transpose();
+
+    if user.is_none(){
+        return Err((StatusCode::NOT_FOUND, String::from("Not found")));
+    }
+
+    match user.unwrap().map_err(internal_error) {
+        Ok(user) => Ok(Json(user)),
+        Err(e) => Err(e),
     }
 }
 
