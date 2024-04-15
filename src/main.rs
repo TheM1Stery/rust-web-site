@@ -1,5 +1,9 @@
+use std::env;
+use axum::routing::post;
 use axum::{routing::get, Router};
-use axum_web_test::{healthcheck, index, return_json};
+use axum_web_test::{create_user, healthcheck, index, return_json, AppState};
+use axum_web_test::database::get_pooled_connection;
+use sqlx::Result;
 use tokio::signal;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -7,15 +11,14 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 
 
-
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
                 // axum logs rejections from built-in extractors with the `axum::rejection`
                 // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
-                "axum-web-test=debug,tower_http=debug,axum::rejection=trace".into()
+                "axum_web_test=debug,tower_http=debug,axum::rejection=trace,sqlx=debug".into()
             }),
         )
         .with(tracing_subscriber::fmt::layer())
@@ -27,21 +30,31 @@ async fn main() {
                     .route("/", get(index))
                     .route("/json", get(return_json))
                     .route("/dummy_healthcheck", get(healthcheck))
+                    .route("/user", post(create_user))
                     .layer(TraceLayer::new_for_http());
 
+    let database_url = env::var("DATABASE_URL")?;
+
+    let pool = get_pooled_connection(&database_url)
+        .await?;
+
+    let router = router.with_state(AppState {
+        db_pool: pool
+    });
 
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}"))
         .await
         .unwrap();
 
-    // tracing::debug!("listening on {}", listener.local_addr().unwrap());
-    println!("Listening on port {port}");
+    tracing::info!("listening on {}", listener.local_addr().unwrap());
 
     axum::serve(listener, router)
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();
+
+    Ok(())
 }
 
 
