@@ -1,7 +1,6 @@
 FROM rust:1.76 as toolchain
 RUN cargo install cargo-chef --locked
 RUN cargo install sqlx-cli --no-default-features --features sqlite
-RUN whereis sqlx
 WORKDIR /app
 
 FROM toolchain as planner
@@ -20,7 +19,7 @@ RUN cargo build --release
 
 FROM debian:bookworm-slim as runtime
 WORKDIR /app
-ENV DATABASE_URL=sqlite:db.sqlite
+ENV DATABASE_URL=sqlite:/app/db.sqlite
 ENV SERVER_ADDRESS=0.0.0.0
 ENV SERVER_PORT=8000
 COPY --from=builder /app/target/release/axum-web-test /app/axum-web-test
