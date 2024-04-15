@@ -25,7 +25,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
 
-    let port = 5000;
     let router = Router::new()
                     .route("/", get(index))
                     .route("/json", get(return_json))
@@ -34,12 +33,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .layer(TraceLayer::new_for_http());
 
     let database_url = env::var("DATABASE_URL")?;
+    let server_address = env::var("SERVER_ADDRESS")?;
+    let server_port = env::var("SERVER_PORT")?;
 
     let pool = get_pooled_connection(&database_url)
-        .await?;
-
-    sqlx::migrate!()
-        .run(&pool)
         .await?;
 
     let router = router.with_state(AppState {
@@ -47,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
 
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}"))
+    let listener = tokio::net::TcpListener::bind(format!("{server_address}:{server_port}"))
         .await
         .unwrap();
 
