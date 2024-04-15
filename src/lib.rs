@@ -17,7 +17,7 @@ pub struct AppState {
 }
 
 pub async fn index() -> Html<&'static str> {
-    Html("<h1>Hello World!</h1>")
+    Html("<h1>Rust website!<h1>")
 }
 
 #[derive(Serialize)]
