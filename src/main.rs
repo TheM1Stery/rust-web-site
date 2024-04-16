@@ -1,7 +1,7 @@
 use std::env;
 use axum::routing::post;
 use axum::{routing::get, Router};
-use axum_web_test::{create_user, get_user, healthcheck, index, return_json, AppState};
+use axum_web_test::{create_user, get_user, healthcheck, index, AppState};
 use axum_web_test::database::get_pooled_connection;
 use sqlx::Result;
 use tokio::signal;
