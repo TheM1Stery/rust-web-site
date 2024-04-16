@@ -27,7 +27,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let router = Router::new()
                     .route("/", get(index))
-                    .route("/json", get(return_json))
                     .route("/dummy_healthcheck", get(healthcheck))
                     .route("/user", post(create_user))
                     .route("/user/:id", get(get_user))
