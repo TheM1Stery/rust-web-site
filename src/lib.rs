@@ -47,9 +47,11 @@ pub async fn create_user(
     Ok(Json(user))
 }
 
-pub async fn get_user(State(state): State<AppState>, Path(id): Path<i64>) -> Result<Json<User>, (StatusCode, String)>{
-    let user =
-        sqlx::query_as!(User, "SELECT * FROM users WHERE id = ?1", id)
+pub async fn get_user(
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Result<Json<User>, (StatusCode, String)> {
+    let user = sqlx::query_as!(User, "SELECT * FROM users WHERE id = ?1", id)
         .fetch_optional(&state.db_pool)
         .await
         .map_err(internal_error)?;
@@ -58,6 +60,17 @@ pub async fn get_user(State(state): State<AppState>, Path(id): Path<i64>) -> Res
         Some(user) => Ok(Json(user)),
         None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
     }
+}
+
+pub async fn get_all_users(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<User>>, (StatusCode, String)> {
+    let users = sqlx::query_as!(User, "SELECT * FROM users")
+        .fetch_all(&state.db_pool)
+        .await
+        .map_err(internal_error)?;
+
+    Ok(Json(users))
 }
 
 fn internal_error<E>(err: E) -> (StatusCode, String)

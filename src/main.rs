@@ -1,7 +1,7 @@
 use std::env;
 use axum::routing::post;
 use axum::{routing::get, Router};
-use axum_web_test::{create_user, get_user, healthcheck, index, AppState};
+use axum_web_test::{create_user, get_all_users, get_user, healthcheck, index, AppState};
 use axum_web_test::database::get_pooled_connection;
 use sqlx::Result;
 use tokio::signal;
@@ -28,7 +28,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let router = Router::new()
                     .route("/", get(index))
                     .route("/dummy_healthcheck", get(healthcheck))
-                    .route("/user", post(create_user))
+                    .route("/user", post(create_user).get(get_all_users))
                     .route("/user/:id", get(get_user))
                     .layer(TraceLayer::new_for_http());
 
