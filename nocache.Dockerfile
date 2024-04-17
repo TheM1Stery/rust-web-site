@@ -5,6 +5,7 @@ WORKDIR /app
 FROM toolchain as builder
 # check query macros
 ENV DATABASE_URL=sqlite:db.sqlite
+COPY . .
 RUN sqlx database create
 RUN sqlx migrate run
 RUN cargo build --release
