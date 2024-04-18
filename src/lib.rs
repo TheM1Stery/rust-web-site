@@ -1,5 +1,5 @@
 pub mod database;
-mod user;
+pub mod endpoints;
 
 use axum::{
     extract::{Path, State},
@@ -7,14 +7,9 @@ use axum::{
     response::{Html, IntoResponse, Response},
     Json,
 };
-use serde::{Deserialize, Serialize};
-use sqlx::SqlitePool;
+use serde::Deserialize;
 use user::User;
 
-#[derive(Clone)]
-pub struct AppState {
-    pub db_pool: SqlitePool,
-}
 
 pub async fn index() -> Html<&'static str> {
     Html("<h1>Rust website!<h1>")
@@ -47,35 +42,3 @@ pub async fn create_user(
     Ok(Json(user))
 }
 
-pub async fn get_user(
-    State(state): State<AppState>,
-    Path(id): Path<i64>,
-) -> Result<Json<User>, (StatusCode, String)> {
-    let user = sqlx::query_as!(User, "SELECT * FROM users WHERE id = ?1", id)
-        .fetch_optional(&state.db_pool)
-        .await
-        .map_err(internal_error)?;
-
-    match user {
-        Some(user) => Ok(Json(user)),
-        None => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
-    }
-}
-
-pub async fn get_all_users(
-    State(state): State<AppState>,
-) -> Result<Json<Vec<User>>, (StatusCode, String)> {
-    let users = sqlx::query_as!(User, "SELECT * FROM users")
-        .fetch_all(&state.db_pool)
-        .await
-        .map_err(internal_error)?;
-
-    Ok(Json(users))
-}
-
-fn internal_error<E>(err: E) -> (StatusCode, String)
-where
-    E: std::error::Error,
-{
-    (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
-}
