@@ -1,30 +1,38 @@
-use axum::Router;
+use axum::{extract::Request, routing::get, Router, ServiceExt};
 use sqlx::SqlitePool;
 use tokio::signal;
-use tower_http::trace::TraceLayer;
+use tower_http::{normalize_path::NormalizePathLayer, trace::TraceLayer};
+use tower_layer::Layer;
 use user::user_router;
+
+use self::misc::{healthcheck, index};
 
 mod user;
 mod errors;
+mod misc;
 
 #[derive(Clone)]
-pub struct AppState {
+struct AppState {
     pub db_pool: SqlitePool,
 }
 
 pub struct ServerOptions<'a> {
-    server_port: &'a str,
-    server_address: &'a str,
-    pool: SqlitePool
+    pub server_port: &'a str,
+    pub server_address: &'a str,
+    pub pool: SqlitePool
 }
 
 pub async fn serve(options: ServerOptions<'_>) {
-    // let state = AppState {
-    //     db_pool: todo!(),
-    // };
-    //
+    let state = AppState {
+        db_pool: options.pool
+    };
 
-    let router = routes();
+    let router = routes()
+        .layer(TraceLayer::new_for_http())
+        .with_state(state);
+
+
+    let app = NormalizePathLayer::trim_trailing_slash().layer(router);
 
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", options.server_address, options.server_port))
@@ -32,14 +40,18 @@ pub async fn serve(options: ServerOptions<'_>) {
         .unwrap();
 
 
-    axum::serve(listener, router)
+    axum::serve(listener, ServiceExt::<Request>::into_make_service(app))
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();
 }
 
 
-fn routes() -> Router {
+fn routes() -> Router<AppState> {
+    Router::new()
+        .route("/", get(index))
+        .route("/dummy_healthcheck", get(healthcheck))
+        .nest("/user", user_router())
 }
 
 async fn shutdown_signal(){
