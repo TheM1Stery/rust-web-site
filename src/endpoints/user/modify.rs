@@ -1,4 +1,6 @@
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{
+    extract::{Path, State}, http::StatusCode, response::IntoResponse, Json
+};
 use serde::Deserialize;
 
 use crate::endpoints::{errors::internal_error, AppState};
@@ -26,4 +28,26 @@ pub async fn create_user(
     .map_err(internal_error)?;
 
     Ok(Json(user))
+}
+
+pub async fn edit_user(
+    Path(id): Path<i64>,
+    State(state): State<AppState>,
+    Json(params): Json<UserParams>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    sqlx::query!(
+        "UPDATE users SET name = ?, email= ? WHERE id = ?",
+        params.name,
+        params.email,
+        id
+    )
+    .execute(&state.db_pool)
+    .await
+    .map_err(internal_error)?;
+
+    Ok(Json(User {
+        id,
+        name: params.name,
+        email: params.email,
+    }))
 }
