@@ -1,11 +1,8 @@
-use std::env;
-use axum_web_test::endpoints::{serve, ServerOptions};
 use axum_web_test::database::get_pooled_connection;
+use axum_web_test::endpoints::{self, ServerOptions};
 use sqlx::Result;
+use std::env;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
-
-
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -24,23 +21,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let server_address = env::var("SERVER_ADDRESS")?;
     let server_port = env::var("SERVER_PORT")?;
 
-    let pool = get_pooled_connection(&database_url)
-        .await?;
+    let pool = get_pooled_connection(&database_url).await?;
 
-    sqlx::migrate!()
-        .run(&pool)
-        .await?;
-
+    sqlx::migrate!().run(&pool).await?;
 
     tracing::info!("listening on {}", server_port);
-    serve(ServerOptions {
+    endpoints::serve(ServerOptions {
         server_port: &server_port,
         server_address: &server_address,
-        pool
+        pool,
     })
     .await;
-
-
 
     Ok(())
 }

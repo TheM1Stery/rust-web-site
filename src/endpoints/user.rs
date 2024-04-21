@@ -1,16 +1,16 @@
-use axum:: Router;
+use axum::Router;
 
 use self::{
-    query::{get_all_users, get_user},
     modify::{create_user, edit_user},
+    query::{get_all_users, get_user},
 };
 use axum::routing::get;
 
 use super::AppState;
 
-mod query;
 mod model;
 mod modify;
+mod query;
 
 pub fn user_router() -> Router<AppState> {
     Router::new()

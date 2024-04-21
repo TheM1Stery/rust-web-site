@@ -4,5 +4,5 @@ use serde::{Deserialize, Serialize};
 pub struct User {
     pub(super) id: i64,
     pub name: String,
-    pub email: String
+    pub email: String,
 }

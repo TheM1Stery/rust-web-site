@@ -1,9 +1,12 @@
-use axum::{extract::{Path, State}, http::StatusCode, Json};
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    Json,
+};
 
 use crate::endpoints::{errors::internal_error, AppState};
 
 use super::model::User;
-
 
 pub async fn get_user(
     State(state): State<AppState>,

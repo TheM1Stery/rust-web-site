@@ -7,9 +7,9 @@ use user::user_router;
 
 use self::misc::{healthcheck, index};
 
-mod user;
 mod errors;
 mod misc;
+mod user;
 
 #[derive(Clone)]
 struct AppState {
@@ -19,33 +19,30 @@ struct AppState {
 pub struct ServerOptions<'a> {
     pub server_port: &'a str,
     pub server_address: &'a str,
-    pub pool: SqlitePool
+    pub pool: SqlitePool,
 }
 
 pub async fn serve(options: ServerOptions<'_>) {
     let state = AppState {
-        db_pool: options.pool
+        db_pool: options.pool,
     };
 
-    let router = routes()
-        .layer(TraceLayer::new_for_http())
-        .with_state(state);
-
+    let router = routes().layer(TraceLayer::new_for_http()).with_state(state);
 
     let app = NormalizePathLayer::trim_trailing_slash().layer(router);
 
-
-    let listener = tokio::net::TcpListener::bind(format!("{}:{}", options.server_address, options.server_port))
-        .await
-        .unwrap();
-
+    let listener = tokio::net::TcpListener::bind(format!(
+        "{}:{}",
+        options.server_address, options.server_port
+    ))
+    .await
+    .unwrap();
 
     axum::serve(listener, ServiceExt::<Request>::into_make_service(app))
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();
 }
-
 
 fn routes() -> Router<AppState> {
     Router::new()
@@ -54,7 +51,7 @@ fn routes() -> Router<AppState> {
         .nest("/user", user_router())
 }
 
-async fn shutdown_signal(){
+async fn shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c()
             .await
@@ -77,6 +74,4 @@ async fn shutdown_signal(){
         _ = ctrl_c => {},
         _ = terminate => {}
     }
-
 }
-
