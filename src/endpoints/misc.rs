@@ -4,7 +4,7 @@ pub async fn index() -> Html<&'static str> {
     Html("<h1>Rust website!<h1>")
 }
 
-pub async fn test() -> Html<&'staic str> {
+pub async fn test() -> Html<&'static str> {
     Html("<div>Rust website 2!</div>")
 }
 
