@@ -5,7 +5,7 @@ use tower_http::{normalize_path::NormalizePathLayer, trace::TraceLayer};
 use tower_layer::Layer;
 use user::user_router;
 
-use self::misc::{healthcheck, index, test};
+use self::misc::{healthcheck, index, test, test2};
 
 mod errors;
 mod misc;
@@ -49,6 +49,7 @@ fn routes() -> Router<AppState> {
         .route("/", get(index))
         .route("/dummy_healthcheck", get(healthcheck))
         .route("/second", get(test))
+        .route("/third", get(test2))
         .nest("/user", user_router())
 }
 

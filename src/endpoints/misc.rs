@@ -8,6 +8,10 @@ pub async fn test() -> Html<&'static str> {
     Html("<div>Rust website 2!</div>")
 }
 
+pub async fn test2() -> Html<&'static str> {
+    Html("<div>Goodbye!</div>")
+}
+
 pub async fn healthcheck() -> Response {
     String::from("OK").into_response()
 }
